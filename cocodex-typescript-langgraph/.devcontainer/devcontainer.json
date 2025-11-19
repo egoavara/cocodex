@@ -1,0 +1,26 @@
+{
+	"name": "Cocodex TypeScript + LangGraph",
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode",
+				"ms-vscode.vscode-typescript-next"
+			],
+			"settings": {
+				"editor.formatOnSave": true,
+				"editor.defaultFormatter": "esbenp.prettier-vscode",
+				"editor.codeActionsOnSave": {
+					"source.fixAll.eslint": "explicit"
+				},
+				"typescript.tsdk": "node_modules/typescript/lib"
+			}
+		}
+	},
+	"forwardPorts": [],
+	"postCreateCommand": "node --version && npm --version",
+	"remoteUser": "node"
+}

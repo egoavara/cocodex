@@ -1,0 +1,16 @@
+{
+	"linter": {
+		"rules": {
+			"correctness": {
+				"noSwitchDeclarations": "warn"
+			}
+		}
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": "on"
+			}
+		}
+	}
+}
