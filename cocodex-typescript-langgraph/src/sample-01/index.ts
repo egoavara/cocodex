@@ -81,17 +81,15 @@ async function executeTools(state: typeof GraphState.State) {
 		return { messages: [] };
 	}
 
-	const toolMessages: ToolMessage[] = [];
+	const toolMessages: BaseMessage[] = [];
 
 	for (const toolCall of lastMessage.tool_calls) {
-		const result = await toolManager.executeTool(toolCall.name, toolCall.args);
-
-		toolMessages.push(
-			new ToolMessage({
-				tool_call_id: toolCall.id || "",
-				content: result,
-			}),
+		const toolMessage = await toolManager.executeTool(
+			toolCall.name,
+			toolCall.args,
+			toolCall.id || "",
 		);
+		toolMessages.push(...toolMessage);
 	}
 
 	return { messages: toolMessages };

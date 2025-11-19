@@ -111,7 +111,10 @@ const handleCommandNode = createHandleCommandNode(commandRegistry);
 /**
  * getUserInput: 사용자 입력을 받는 노드
  */
-export function createGetUserInputNode(rl: readline.Interface) {
+export function createGetUserInputNode(
+	rl: readline.Interface,
+	sessionManager: SessionManager,
+) {
 	return async (state: typeof GraphStateWithDialog.State) => {
 		// AI 응답이 있으면 출력
 		const messages = sessionManager.getMessages(state.sessionId);
@@ -180,7 +183,7 @@ export function createRouteInput() {
  * - executed → getUserInput (실행 완료, 다시 입력)
  * - prompt → agent (AI에게 전달)
  */
-export function createRouteCommand() {
+export function createRouteCommand(commandRegistry: CommandRegistry) {
 	return (state: typeof GraphStateWithDialog.State): string => {
 		const result: CommandResult = state.commandResult;
 
@@ -214,7 +217,7 @@ export function createRouteCommand() {
 /**
  * addMessage: commandResult.message를 세션에 추가하는 노드
  */
-export function createAddMessageNode() {
+export function createAddMessageNode(sessionManager: SessionManager) {
 	return async (state: typeof GraphStateWithDialog.State) => {
 		const result: CommandResult = state.commandResult;
 
@@ -233,7 +236,7 @@ export function createAddMessageNode() {
 /**
  * addUserMessage: userInput을 세션에 추가하는 노드 (일반 메시지)
  */
-export function createAddUserMessageNode() {
+export function createAddUserMessageNode(sessionManager: SessionManager) {
 	return async (state: typeof GraphStateWithDialog.State) => {
 		if (state.userInput) {
 			sessionManager.addMessage(
@@ -255,7 +258,8 @@ export function createAddUserMessageNode() {
  * - 압축 필요 → compact
  * - 일반 응답 → getUserInput
  */
-function createShouldContinue(
+export function createShouldContinue(
+	sessionManager: SessionManager,
 	compactor: ContextCompactor,
 	maxIterations: number = 10,
 ) {
@@ -312,12 +316,12 @@ function createShouldContinue(
  *           └────────[agent] [tools][compact][getUserInput][END]
  */
 function createAgent(rl: readline.Interface) {
-	const getUserInputNode = createGetUserInputNode(rl);
-	const addMessageNode = createAddMessageNode();
-	const addUserMessageNode = createAddUserMessageNode();
+	const getUserInputNode = createGetUserInputNode(rl, sessionManager);
+	const addMessageNode = createAddMessageNode(sessionManager);
+	const addUserMessageNode = createAddUserMessageNode(sessionManager);
 	const routeInput = createRouteInput();
-	const routeCommand = createRouteCommand();
-	const shouldContinue = createShouldContinue(compactor);
+	const routeCommand = createRouteCommand(commandRegistry);
+	const shouldContinue = createShouldContinue(sessionManager, compactor);
 
 	const workflow = new StateGraph(GraphStateWithDialog)
 		.addNode("getUserInput", getUserInputNode)
@@ -426,7 +430,7 @@ async function main() {
 	// 8. 종료 처리
 	rl.close();
 
-	console.log("\n=".repeat(60));
+	console.log("\n" + "=".repeat(60));
 	console.log("📊 최종 통계");
 	console.log("=".repeat(60));
 	console.log(`   총 메시지: ${sessionManager.getMessageCount(sessionId)}개`);

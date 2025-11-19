@@ -328,12 +328,27 @@ async function main() {
 			if (parsed) {
 				const { commandName, args } = parsed;
 
-				// context 전달하여 실행
-				finalPrompt = await commandRegistry.execute(commandName, args, {
+				// 명령어 실행
+				const result = await commandRegistry.execute(commandName, args, {
 					sessionManager,
 					compactor,
 					sessionId,
 				});
+
+				// 에러 처리
+				if (result.type === "error") {
+					console.log(`\n${result.message}`);
+					console.log(commandRegistry.getCommandDescriptions());
+					return;
+				}
+
+				// prompt 타입만 처리 (Sample-04에서는 template 명령어만 사용)
+				if (result.type !== "prompt") {
+					console.log("\n❌ 예상치 못한 명령어 결과 타입");
+					return;
+				}
+
+				finalPrompt = result.message;
 
 				// 에러 처리
 				if (finalPrompt?.startsWith("❌")) {

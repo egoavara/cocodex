@@ -14,6 +14,7 @@
 import { exec } from "node:child_process";
 import { promises as fs } from "node:fs";
 import { promisify } from "node:util";
+import { type BaseMessage, ToolMessage } from "@langchain/core/messages";
 
 const execAsync = promisify(exec);
 
@@ -33,7 +34,7 @@ export interface ToolSchema {
 }
 
 // biome-ignore lint/suspicious/noExplicitAny: Tool arguments are dynamic from OpenAI API
-export type ToolExecutor = (args: any) => Promise<string>;
+export type ToolExecutor = (args: any, toolCallId?: string) => Promise<string | BaseMessage[] | BaseMessage>;
 
 // ========== ToolManager ==========
 
@@ -68,21 +69,44 @@ export class ToolManager {
 
 	// 툴 실행
 	// biome-ignore lint/suspicious/noExplicitAny: Tool arguments are dynamic from OpenAI API
-	async executeTool(toolName: string, args: any): Promise<string> {
+	async executeTool(
+		toolName: string,
+		args: any,
+		toolCallId?: string,
+	): Promise<BaseMessage[]> {
 		console.log(`    🔧 [Tool] ${toolName}(${JSON.stringify(args)})`);
 
 		const executor = this.executors.get(toolName);
 		if (!executor) {
-			return `Unknown tool: ${toolName}`;
+			return [new ToolMessage({
+				tool_call_id: toolCallId || "",
+				content: `Unknown tool: ${toolName}`,
+			})];
 		}
 
 		try {
-			const result = await executor(args);
-			return result;
+			const result = await executor(args, toolCallId);
+
+			// string인 경우만 ToolMessage로 래핑
+			if (typeof result === "string") {
+				return [new ToolMessage({
+					tool_call_id: toolCallId || "",
+					content: result,
+				})];
+			}
+			if (Array.isArray(result)) {
+				return result;
+			}
+
+			// BaseMessage인 경우 (이미지 등) 그대로 반환
+			return [result];
 		} catch (error) {
 			const errorMsg = `오류: ${error}`;
 			console.log(`    ❌ [Error] ${errorMsg}`);
-			return errorMsg;
+			return [new ToolMessage({
+				tool_call_id: toolCallId || "",
+				content: errorMsg,
+			})];
 		}
 	}
 

@@ -67,17 +67,48 @@ export class ContextCompactor {
 
 	/**
 	 * 메시지 배열의 토큰 수를 계산 (tiktoken 사용)
+	 *
+	 * 이미지의 경우 OpenAI Vision API 토큰 계산 공식 사용:
+	 * - 저해상도(detail=low): 85 토큰
+	 * - 고해상도(detail=high): (width/512) * (height/512) * 170 + 85 토큰
+	 * - detail 지정 안 됨: 기본적으로 고해상도로 간주하여 보수적으로 추정
 	 */
 	estimateTokens(messages: BaseMessage[]): number {
 		let totalTokens = 0;
 
 		for (const msg of messages) {
-			const content =
-				typeof msg.content === "string"
-					? msg.content
-					: JSON.stringify(msg.content);
+			// 이미지 메시지 처리
+			if (typeof msg.content !== "string" && Array.isArray(msg.content)) {
+				for (const item of msg.content) {
+					// biome-ignore lint/suspicious/noExplicitAny: content item type varies
+					const contentItem = item as any;
+					if (contentItem.type === "image_url") {
+						// OpenAI Vision API 토큰 계산
+						// detail이 low면 85, 아니면 평균적으로 255-765 토큰
+						// 정확한 계산은 이미지 크기가 필요하므로 중간값 사용
+						const detail = contentItem.image_url?.detail || "auto";
+						if (detail === "low") {
+							totalTokens += 85;
+						} else {
+							// high 또는 auto: 평균적으로 512x512 이미지 기준
+							// (512/512) * (512/512) * 170 + 85 = 255 토큰
+							// 보수적으로 약간 높게 잡아 400 토큰으로 추정
+							totalTokens += 400;
+						}
+					} else if (contentItem.type === "text") {
+						totalTokens += this.encoding.encode(contentItem.text || "").length;
+					}
+				}
+			} else {
+				// 일반 텍스트 메시지
+				const content =
+					typeof msg.content === "string"
+						? msg.content
+						: JSON.stringify(msg.content);
 
-			totalTokens += this.encoding.encode(content).length;
+				totalTokens += this.encoding.encode(content).length;
+			}
+
 			totalTokens += 4; // 메타데이터
 		}
 

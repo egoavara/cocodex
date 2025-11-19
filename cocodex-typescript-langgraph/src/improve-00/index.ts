@@ -53,6 +53,14 @@ const compactor = new ContextCompactor({
 // ========== GraphState 확장 (대화 제어) ==========
 
 import { Annotation } from "@langchain/langgraph";
+import {
+	createAddMessageNode,
+	createAddUserMessageNode,
+	createGetUserInputNode,
+	createRouteCommand,
+	createRouteInput,
+	createShouldContinue,
+} from "../sample-06/index.js";
 
 export const GraphStateWithDialog = Annotation.Root({
 	sessionId: Annotation<string>({
@@ -113,191 +121,11 @@ const parseInputNode = createParseInputNode(commandRegistry);
 const handleCommandNode = createHandleCommandNode(commandRegistry);
 
 // ========== 대화 관련 노드 ==========
-
-/**
- * getUserInput: 사용자 입력을 받는 노드
- */
-export function createGetUserInputNode(rl: readline.Interface) {
-	return async (state: typeof GraphStateWithDialog.State) => {
-		// AI 응답이 있으면 출력
-		const messages = sessionManager.getMessages(state.sessionId);
-		if (messages.length > 1) {
-			const lastMessage = messages[messages.length - 1] as AIMessage;
-			if (lastMessage._getType() === "ai") {
-				console.log(`\n${"=".repeat(60)}`);
-				console.log(`\n🤖 AI:\n${lastMessage.content}\n`);
-				console.log("=".repeat(60));
-			}
-		}
-
-		// 사용자 입력 받기
-		let userInput: string;
-		try {
-			userInput = await rl.question("\n💬 You: ");
-		} catch (_error) {
-			// readline이 닫혔거나 stdin EOF 도달
-			console.log("\n👋 입력 스트림이 닫혔습니다. 대화를 종료합니다.");
-			return { shouldClose: true };
-		}
-
-		const input = userInput.trim();
-
-		// 빈 입력 = 종료
-		if (input === "") {
-			console.log("\n👋 빈 입력으로 대화를 종료합니다.");
-			return { shouldClose: true };
-		}
-
-		return {
-			userInput: input,
-			iterations: 0, // 새로운 턴이므로 iterations 리셋
-		};
-	};
-}
-
-// ========== 라우팅 로직 ==========
-
-/**
- * routeInput: userInput에 따라 라우팅
- *
- * 흐름:
- * - commandResult가 null → 일반 메시지 → agent
- * - commandResult가 있음 → 명령어 → handleCommand
- */
-export function createRouteInput() {
-	return (state: typeof GraphStateWithDialog.State): string => {
-		// parseInput 노드가 commandResult를 설정함
-		if (state.commandResult === null) {
-			console.log("  🔀 [RouteInput] → agent 노드");
-			return "agent";
-		}
-
-		console.log("  🔀 [RouteInput] → handleCommand 노드");
-		return "handleCommand";
-	};
-}
-
-/**
- * routeCommand: 명령어 실행 결과에 따라 라우팅
- *
- * 흐름:
- * - close → END
- * - error → getUserInput (에러 출력 후 다시 입력)
- * - executed → getUserInput (실행 완료, 다시 입력)
- * - prompt → agent (AI에게 전달)
- */
-export function createRouteCommand() {
-	return (state: typeof GraphStateWithDialog.State): string => {
-		const result: CommandResult = state.commandResult;
-
-		if (result.type === "close") {
-			console.log("  🔀 [RouteCommand] close → END");
-			return END;
-		}
-
-		if (result.type === "error") {
-			console.log(`  🔀 [RouteCommand] error → getUserInput`);
-			console.log(`\n${result.message}`);
-			console.log(commandRegistry.getCommandDescriptions());
-			return "getUserInput";
-		}
-
-		if (result.type === "executed") {
-			console.log("  🔀 [RouteCommand] executed → getUserInput");
-			return "getUserInput";
-		}
-
-		if (result.type === "prompt") {
-			console.log("  🔀 [RouteCommand] prompt → addMessage");
-			return "addMessage";
-		}
-
-		console.log("  🔀 [RouteCommand] unknown → getUserInput");
-		return "getUserInput";
-	};
-}
-
-/**
- * addMessage: commandResult.message를 세션에 추가하는 노드
- */
-export function createAddMessageNode() {
-	return async (state: typeof GraphStateWithDialog.State) => {
-		const result: CommandResult = state.commandResult;
-
-		if (result.type === "prompt") {
-			console.log(`\n💬 생성된 프롬프트:\n${result.message}\n`);
-			sessionManager.addMessage(
-				new HumanMessage(result.message),
-				state.sessionId,
-			);
-		}
-
-		return {};
-	};
-}
-
-/**
- * addUserMessage: userInput을 세션에 추가하는 노드 (일반 메시지)
- */
-export function createAddUserMessageNode() {
-	return async (state: typeof GraphStateWithDialog.State) => {
-		if (state.userInput) {
-			sessionManager.addMessage(
-				new HumanMessage(state.userInput),
-				state.sessionId,
-			);
-		}
-		return {};
-	};
-}
-
-/**
- * shouldContinue: agent 후 라우팅
- *
- * 흐름:
- * - shouldClose → END
- * - iterations 초과 → END
- * - tool 호출 → tools
- * - 압축 필요 → compact
- * - 일반 응답 → getUserInput
- */
-function createShouldContinue(
-	compactor: ContextCompactor,
-	maxIterations: number = 10,
-) {
-	return (state: typeof GraphStateWithDialog.State): string => {
-		// 1. 종료 플래그
-		if (state.shouldClose) {
-			console.log("\n🔀 [ShouldContinue] shouldClose = true → END");
-			return END;
-		}
-
-		// 2. 최대 반복
-		if (state.iterations >= maxIterations) {
-			console.log(`\n⚠️  [ShouldContinue] 최대 반복 도달 (${maxIterations}회)`);
-			return END;
-		}
-
-		const messages = sessionManager.getMessages(state.sessionId);
-		const lastMessage = messages[messages.length - 1] as AIMessage;
-
-		// 3. Tool 호출
-		if (lastMessage.tool_calls && lastMessage.tool_calls.length > 0) {
-			console.log(`  🔀 [ShouldContinue] → tools 노드`);
-			return "tools";
-		}
-
-		// 4. 압축 필요
-		if (compactor.shouldCompact(messages)) {
-			console.log(`  🔀 [ShouldContinue] 압축 필요 → compact 노드`);
-			return "compact";
-		}
-
-		// 5. 일반 응답 → 사용자 입력 대기
-		console.log(`  🔀 [ShouldContinue] → getUserInput 노드`);
-		return "getUserInput";
-	};
-}
+const addMessageNode = createAddMessageNode(sessionManager);
+const addUserMessageNode = createAddUserMessageNode(sessionManager);
+const routeInput = createRouteInput();
+const routeCommand = createRouteCommand(commandRegistry);
+const shouldContinue = createShouldContinue(sessionManager, compactor);
 
 /**
  * createAgent: Improve-00 에이전트 생성
@@ -318,13 +146,7 @@ function createShouldContinue(
  *           └────────[agent] [tools][compact][getUserInput][END]
  */
 function createAgent(rl: readline.Interface) {
-	const getUserInputNode = createGetUserInputNode(rl);
-	const addMessageNode = createAddMessageNode();
-	const addUserMessageNode = createAddUserMessageNode();
-	const routeInput = createRouteInput();
-	const routeCommand = createRouteCommand();
-	const shouldContinue = createShouldContinue(compactor);
-
+	const getUserInputNode = createGetUserInputNode(rl, sessionManager);
 	const workflow = new StateGraph(GraphStateWithDialog)
 		.addNode("getUserInput", getUserInputNode)
 		.addNode("parseInput", parseInputNode)
@@ -432,7 +254,7 @@ async function main() {
 	// 9. 종료 처리
 	rl.close();
 
-	console.log("\n=".repeat(60));
+	console.log("\n" + "=".repeat(60));
 	console.log("📊 최종 통계");
 	console.log("=".repeat(60));
 	console.log(`   총 메시지: ${sessionManager.getMessageCount(sessionId)}개`);
@@ -448,7 +270,7 @@ async function main() {
 	console.log("  4. 코드 격리: 기존 Sample 코드를 수정하지 않고 확장");
 	console.log("  5. Tool Description: AI의 판단 기준이 되는 설명의 중요성\n");
 
-	console.log("🚀 다음: npm run improve-01 (TUI Stream 출력)");
+	console.log("🚀 다음: npm run improve-01 (Stream 출력)");
 }
 
 // 직접 실행될 때만 main() 호출 (import 시에는 실행 안 함)

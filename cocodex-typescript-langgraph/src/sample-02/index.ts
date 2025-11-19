@@ -15,6 +15,7 @@
 import readline from "node:readline/promises";
 import {
 	type AIMessage,
+	type BaseMessage,
 	HumanMessage,
 	SystemMessage,
 	ToolMessage,
@@ -136,20 +137,15 @@ export function createExecuteTools(
 			return {};
 		}
 
-		const toolMessages: ToolMessage[] = [];
+		const toolMessages: BaseMessage[] = [];
 
 		for (const toolCall of lastMessage.tool_calls) {
-			const result = await toolManager.executeTool(
+			const toolMessage = await toolManager.executeTool(
 				toolCall.name,
 				toolCall.args,
+				toolCall.id || "",
 			);
-
-			toolMessages.push(
-				new ToolMessage({
-					tool_call_id: toolCall.id || "",
-					content: result,
-				}),
-			);
+			toolMessages.push(...toolMessage);
 		}
 
 		// SessionManager에 Tool 결과 추가

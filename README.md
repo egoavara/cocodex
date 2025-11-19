@@ -1,3 +1,7 @@
+> [!NOTE]
+> 이 애니메이션은 [cocodex로 만들어졌습니다](./statics/cocodex_animwork.png). 
+
+![cocodex 애니메이션](./statics/logo_anim.gif)
 # Cocodex: AI 코딩 도구 만들기
 
 > AI로 AI 코딩 도구를 만들어보는 학습 프로젝트
