@@ -19,8 +19,12 @@ AI 코딩 CLI 도구(Claude Code, Codex, Gemini CLI)의 **작동 원리를 이�
 
 ```
 cocodex/
-├── cocodex-{언어}-{프레임워크}/   # 학습 자료 (같은 개념을 다른 스택으로 구현)
-└── cocodex-implements/            # 학습자가 직접 구현을 시작하는 작업 디렉토리
+├── cocodex-{언어}-{프레임워크}/   # 참고용 학습 자료
+└── cocodex-implements/            # 직접 구현하는 작업 디렉토리
 ```
 
-각 서브 프로젝트의 상세 내용은 해당 디렉토리의 README 참조.
+## 학습 방법
+
+1. 이 레포를 **포크**
+2. `cocodex-{언어}-{프레임워크}/`를 참고하며 개념 학습
+3. `cocodex-implements/`에서 직접 구현
