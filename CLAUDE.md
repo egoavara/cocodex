@@ -6,8 +6,6 @@ AI 코딩 CLI 도구(Claude Code, Codex, Gemini CLI)의 **작동 원리를 이�
 
 ## AI 코딩 도구의 핵심 구성요소
 
-이 프로젝트에서 학습하는 AI 에이전트의 핵심 개념:
-
 | 구성요소 | 설명 |
 |----------|------|
 | **Tool/Function Calling** | AI가 외부 도구(파일 읽기, 코드 실행 등)를 호출하는 메커니즘 |
@@ -21,9 +19,8 @@ AI 코딩 CLI 도구(Claude Code, Codex, Gemini CLI)의 **작동 원리를 이�
 
 ```
 cocodex/
-├── cocodex-typescript-langgraph/   # TypeScript + LangGraph 구현
-├── cocodex-typescript-openaisdk/   # OpenAI SDK 구현 (예정)
-└── cocodex-implements/             # 실제 구현체
+├── cocodex-{언어}-{프레임워크}/   # 학습 자료 (같은 개념을 다른 스택으로 구현)
+└── cocodex-implements/            # 실제 구현체
 ```
 
 각 서브 프로젝트의 상세 내용은 해당 디렉토리의 README 참조.
