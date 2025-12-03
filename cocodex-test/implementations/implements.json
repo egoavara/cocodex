@@ -1,0 +1,30 @@
+{
+  "name": "cocodex-implements",
+  "description": "COCODEX implementation in cocodex-implements",
+  "rootDir": "../cocodex-implements",
+  "command": {
+    "type": "custom",
+    "file": "./cocodex-implements/run.sh",
+    "args": [],
+    "workingDir": ".."
+  },
+  "environment": {
+    "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+    "OPENAI_MODEL": "gpt-4o"
+  },
+  "prompts": {
+    "input": "You: ",
+    "output": "AI:",
+    "tool": "[Tool]"
+  },
+  "paths": {
+    "sessions": ".cocodex/sessions",
+    "commands": ".cocodex/commands",
+    "context": "cocoagent.md"
+  },
+  "timeouts": {
+    "startup": 15000,
+    "response": 60000,
+    "toolExecution": 30000
+  }
+}

@@ -1,0 +1,46 @@
+name: "Custom Commands"
+description: "Tests built-in commands - /status, /compact, /close"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # /status 명령어
+  - type: "input"
+    text: "/status"
+
+  # 다음 턴 대기
+  - type: "wait"
+    condition: "turn"
+    timeout: 30000
+
+  # 대화 추가 (압축 테스트용)
+  - type: "input"
+    text: "안녕하세요, 테스트입니다"
+
+  # 다음 턴 대기
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /compact 명령어
+  - type: "input"
+    text: "/compact"
+
+  # 다음 턴 대기 (압축은 AI 호출이라 오래 걸림)
+  - type: "wait"
+    condition: "turn"
+    timeout: 180000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

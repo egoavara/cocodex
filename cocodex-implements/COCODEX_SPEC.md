@@ -22,6 +22,8 @@ You: (빈 입력 또는 /close)
 
 **종료 조건**: 빈 입력, `/close` 명령어, 또는 EOF
 
+**입력 프롬프트 (필수)**: 사용자 입력을 받을 때 반드시 `You: ` 프롬프트를 출력해야 합니다. 이는 테스트 자동화에서 턴 감지에 사용됩니다.
+
 ---
 
 ### 1.2 자동 Tool 사용
@@ -166,8 +168,12 @@ description: 코드 분석
 - `OPENAI_MODEL` (선택, 기본값: gpt-4o)
 - `OPENAI_TEMPERATURE` (선택, 기본값: 0.2)
 
+**실행 스크립트**:
+- `run.sh` 실행 시 TUI가 시작되어야 합니다
+
 **디렉토리 구조**:
 ```
+run.sh             # TUI 실행 스크립트
 .cocodex/
   commands/        # 템플릿 명령어
     analyze.md

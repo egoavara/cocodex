@@ -1,0 +1,29 @@
+name: "Basic Conversation"
+description: "Tests basic Q&A flow - greeting and graceful exit"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기 - "You: " 프롬프트가 나타날 때까지
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 인사
+  - type: "input"
+    text: "안녕하세요"
+
+  # 다음 턴 대기 (AI 응답 완료 후 "You: " 프롬프트)
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  # 프로세스 종료 대기
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

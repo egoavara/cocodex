@@ -1,0 +1,65 @@
+name: "Message Compression"
+description: "Tests message compression via /compact command"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 여러 대화 생성
+  - type: "input"
+    text: "안녕하세요"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  - type: "input"
+    text: "오늘 날씨가 어때?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  - type: "input"
+    text: "TypeScript에 대해 알려줘"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # 현재 상태 확인
+  - type: "input"
+    text: "/status"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 30000
+
+  # 압축 실행
+  - type: "input"
+    text: "/compact"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 180000
+
+  # 압축 후 상태 확인
+  - type: "input"
+    text: "/status"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 30000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

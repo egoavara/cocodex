@@ -1,0 +1,52 @@
+name: "Context Loading"
+description: "Tests cocoagent.md automatic loading and context awareness"
+implementation: "typescript-langgraph"
+
+setup:
+  files:
+    - path: "../cocodex-typescript-langgraph/cocoagent.md"
+      content: |
+        # Test Project Context
+
+        This is a test project named "COCODEX-TEST-PROJECT".
+        The project version is 9.9.9.
+
+        Important rules:
+        - Always mention the project name when asked
+        - The secret code is "ALPHA-BRAVO-CHARLIE"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 컨텍스트 인식 질문
+  - type: "input"
+    text: "이 프로젝트의 이름이 뭐야?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # 추가 컨텍스트 확인
+  - type: "input"
+    text: "secret code가 뭐야?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000
+
+teardown:
+  cleanup:
+    - "../cocodex-typescript-langgraph/cocoagent.md"

@@ -1,0 +1,28 @@
+name: "Sequential Tools"
+description: "Tests sequential tool execution - list directory then read files"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 디렉토리 조회 및 파일 읽기 요청
+  - type: "input"
+    text: "src 폴더에 어떤 파일들이 있는지 보여주고, 첫 번째 파일의 내용을 요약해줘"
+
+  # 다음 턴 대기
+  - type: "wait"
+    condition: "turn"
+    timeout: 180000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

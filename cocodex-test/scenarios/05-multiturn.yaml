@@ -1,0 +1,43 @@
+name: "Multi-turn Conversation"
+description: "Tests multiple rounds of conversation maintaining context"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 첫 번째 턴 - 숫자 질문
+  - type: "input"
+    text: "1+1은 뭐야?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # 두 번째 턴 - 이전 문맥 참조
+  - type: "input"
+    text: "그러면 2+2는?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # 세 번째 턴 - 더 복잡한 질문
+  - type: "input"
+    text: "방금 계산한 두 결과를 더하면?"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

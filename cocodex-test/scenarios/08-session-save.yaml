@@ -1,0 +1,33 @@
+name: "Session Persistence"
+description: "Tests session saving to .cocodex/sessions/*.json"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 간단한 대화
+  - type: "input"
+    text: "세션 저장 테스트입니다"
+
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /close로 정상 종료 (세션 저장 트리거)
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000
+
+  # 세션 파일 확인 (프로세스 CWD인 cocodex 루트 기준)
+  - type: "assert"
+    assertions:
+      - type: "file_exists"
+        pattern: "../.cocodex/sessions/*.json"

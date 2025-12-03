@@ -1,0 +1,28 @@
+name: "Tool Usage - File Read"
+description: "Tests automatic tool invocation for file reading"
+implementation: "typescript-langgraph"
+
+steps:
+  # 시작 대기
+  - type: "wait"
+    condition: "regex"
+    pattern: "You:\\s*$"
+    timeout: 30000
+
+  # 파일 읽기 요청
+  - type: "input"
+    text: "README.md 파일을 읽어줘"
+
+  # 다음 턴 대기
+  - type: "wait"
+    condition: "turn"
+    timeout: 120000
+
+  # /close로 정상 종료
+  - type: "input"
+    text: "/close"
+
+  - type: "wait"
+    condition: "exit_or_silence"
+    silenceDuration: 5000
+    timeout: 30000

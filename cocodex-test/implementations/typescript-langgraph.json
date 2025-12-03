@@ -1,0 +1,31 @@
+{
+  "name": "cocodex-typescript-langgraph",
+  "description": "TypeScript + LangGraph implementation of COCODEX",
+  "rootDir": "../cocodex-typescript-langgraph",
+  "command": {
+    "type": "custom",
+    "file": "./cocodex-typescript-langgraph/node_modules/.bin/tsx",
+    "args": ["./cocodex-typescript-langgraph/src/improve-02/index.ts"],
+    "workingDir": ".."
+  },
+  "environment": {
+    "OPENAI_API_KEY": "${OPENAI_API_KEY}",
+    "OPENAI_MODEL": "gpt-4o",
+    "OPENAI_TEMPERATURE": "0.2"
+  },
+  "prompts": {
+    "input": "You: ",
+    "output": "AI:",
+    "tool": "[Tool]"
+  },
+  "paths": {
+    "sessions": ".cocodex/sessions",
+    "commands": ".cocodex/commands",
+    "context": "cocoagent.md"
+  },
+  "timeouts": {
+    "startup": 15000,
+    "response": 60000,
+    "toolExecution": 30000
+  }
+}
