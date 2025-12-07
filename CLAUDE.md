@@ -1,0 +1,30 @@
+# CLAUDE.md
+
+## 프로젝트 목표
+
+AI 코딩 CLI 도구(Claude Code, Codex, Gemini CLI)의 **작동 원리를 이해**하기 위한 학습 프로젝트.
+
+## AI 코딩 도구의 핵심 구성요소
+
+| 구성요소 | 설명 |
+|----------|------|
+| **Tool/Function Calling** | AI가 외부 도구(파일 읽기, 코드 실행 등)를 호출하는 메커니즘 |
+| **Agent Loop** | Tool 호출 → 결과 반환 → AI 판단 → 반복의 순환 구조 |
+| **Session Management** | 대화 히스토리 유지 및 상태 관리 |
+| **Context Management** | 시스템 프롬프트, 파일 컨텍스트 등 AI에게 제공되는 정보 |
+| **Context Compaction** | 토큰 한도 내에서 컨텍스트를 압축하는 전략 |
+| **Command System** | `/help`, `/clear` 같은 사용자 명령어 처리 |
+
+## 프로젝트 구조
+
+```
+cocodex/
+├── cocodex-{언어}-{프레임워크}/   # 참고용 학습 자료
+└── cocodex-implements/            # 직접 구현하는 작업 디렉토리
+```
+
+## 학습 방법
+
+1. 이 레포를 **포크**
+2. `cocodex-{언어}-{프레임워크}/`를 참고하며 개념 학습
+3. `cocodex-implements/`에서 직접 구현
